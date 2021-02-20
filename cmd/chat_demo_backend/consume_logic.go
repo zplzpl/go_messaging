@@ -4,16 +4,15 @@ import (
 	"fmt"
 
 	"go_messaging/internal/pubsub"
-	"go_messaging/internal/ws_connect"
 	"go_messaging/pkg/json"
 )
 
 type ConsumeLogic struct {
-	RoomManager *ws_connect.RoomManager
+	MQPublisher *MQPublisher
 }
 
-func NewConsumeLogic(roomManager *ws_connect.RoomManager) *ConsumeLogic {
-	return &ConsumeLogic{RoomManager: roomManager}
+func NewConsumeLogic(MQPublisher *MQPublisher) *ConsumeLogic {
+	return &ConsumeLogic{MQPublisher: MQPublisher}
 }
 
 func (c *ConsumeLogic) ConsumeMsg(msg []byte) error {
@@ -24,13 +23,21 @@ func (c *ConsumeLogic) ConsumeMsg(msg []byte) error {
 		return err
 	}
 
-	room, found := c.RoomManager.PureFindRoom(obj.RoomId)
-	if !found {
-		return nil
+	// handle logic
+	resp := &pubsub.Msg{
+		RoomId:  obj.RoomId,
+		Content: []byte(fmt.Sprintf("you send msg: %s", string(obj.Content))),
 	}
 
-	// send msg to room
-	room.Broadcast([]byte(fmt.Sprintf("you send msg: %s", string(obj.Content))))
+	buf, err := json.Marshal(resp)
+	if err != nil {
+		return err
+	}
+
+	// publish result to rabbitMQ
+	if err := c.MQPublisher.Publish("", buf); err != nil {
+		return err
+	}
 
 	return nil
 }

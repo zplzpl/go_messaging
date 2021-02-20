@@ -20,11 +20,11 @@ func NewMQConsumer(cfg *ConfigParser, ch *amqp.Channel, h ConsumeHandler) (*MQCo
 	m := &MQConsumer{cfg: cfg, ch: ch, h: h}
 
 	q, err := ch.QueueDeclare(
-		cfg.RabbitMQ.MsgQueueDeclare.Name,
-		cfg.RabbitMQ.MsgQueueDeclare.Durable,
-		cfg.RabbitMQ.MsgQueueDeclare.DeleteWhenUnused,
-		cfg.RabbitMQ.MsgQueueDeclare.Exclusive,
-		cfg.RabbitMQ.MsgQueueDeclare.NoWait,
+		cfg.RabbitMQ.MsgRespQueueDeclare.Name,
+		cfg.RabbitMQ.MsgRespQueueDeclare.Durable,
+		cfg.RabbitMQ.MsgRespQueueDeclare.DeleteWhenUnused,
+		cfg.RabbitMQ.MsgRespQueueDeclare.Exclusive,
+		cfg.RabbitMQ.MsgRespQueueDeclare.NoWait,
 		nil,
 	)
 	if err != nil {
@@ -34,9 +34,9 @@ func NewMQConsumer(cfg *ConfigParser, ch *amqp.Channel, h ConsumeHandler) (*MQCo
 
 	err = ch.QueueBind(
 		q.Name,
-		cfg.RabbitMQ.MsgQueueBind.RoutingKey,
-		cfg.RabbitMQ.MsgQueueBind.Exchange,
-		cfg.RabbitMQ.MsgQueueBind.NoWait,
+		cfg.RabbitMQ.MsgRespQueueBind.RoutingKey,
+		cfg.RabbitMQ.MsgRespQueueBind.Exchange,
+		cfg.RabbitMQ.MsgRespQueueBind.NoWait,
 		nil,
 	)
 	if err != nil {
@@ -51,11 +51,11 @@ func (m *MQConsumer) Run() error {
 
 	msgs, err := m.ch.Consume(
 		m.q.Name,
-		m.cfg.RabbitMQ.MsgConsume.Consumer,
-		m.cfg.RabbitMQ.MsgConsume.AutoAck,
-		m.cfg.RabbitMQ.MsgConsume.Exclusive,
-		m.cfg.RabbitMQ.MsgConsume.NoLocal,
-		m.cfg.RabbitMQ.MsgConsume.NoWait,
+		m.cfg.RabbitMQ.MsgRespConsume.Consumer,
+		m.cfg.RabbitMQ.MsgRespConsume.AutoAck,
+		m.cfg.RabbitMQ.MsgRespConsume.Exclusive,
+		m.cfg.RabbitMQ.MsgRespConsume.NoLocal,
+		m.cfg.RabbitMQ.MsgRespConsume.NoWait,
 		nil,
 	)
 	if err != nil {

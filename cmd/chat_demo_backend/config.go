@@ -18,8 +18,8 @@ type ConfigParser struct {
 }
 
 type RabbitMQCfg struct {
-	DialUrl  string
-	Exchange struct {
+	DialUrl     string
+	MsgExchange struct {
 		Name        string
 		Type        string
 		Durable     bool
@@ -27,30 +27,38 @@ type RabbitMQCfg struct {
 		Internal    bool
 		NoWait      bool
 	}
-	Publish struct {
-		Exchange   string
-		RoutingKey string
-		Mandatory  bool
-		Immediate  bool
-	}
-	QueueDeclare struct {
+	MsgQueueDeclare struct {
 		Name             string
 		Durable          bool
 		DeleteWhenUnused bool
 		Exclusive        bool
 		NoWait           bool
 	}
-	QueueBind struct {
+	MsgQueueBind struct {
 		RoutingKey string
 		Exchange   string
 		NoWait     bool
 	}
-	Consume struct {
+	MsgConsume struct {
 		Consumer  string
 		AutoAck   bool
 		Exclusive bool
 		NoLocal   bool
 		NoWait    bool
+	}
+	MsgRespExchange struct {
+		Name        string
+		Type        string
+		Durable     bool
+		AutoDeleted bool
+		Internal    bool
+		NoWait      bool
+	}
+	MsgRespPublish struct {
+		Exchange   string
+		RoutingKey string
+		Mandatory  bool
+		Immediate  bool
 	}
 }
 

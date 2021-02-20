@@ -7,51 +7,13 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
 	"github.com/streadway/amqp"
-	api "go_messaging/cmd/chat_demo_backend/app"
 	"go_messaging/internal/pubsub"
-	"go_messaging/internal/ws_connect"
 	"go_messaging/pkg/logger"
-	"go_messaging/pkg/unique_id"
 )
 
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-}
-
-var roomManager *ws_connect.RoomManager
-
 func serveHome(ctx *gin.Context) {
-	ctx.Data(http.StatusOK, "", []byte("websocket server"))
-}
-
-// serveWs handles websocket requests from the peer.
-func ServeWs(ctx *gin.Context) {
-
-	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
-	if err != nil {
-		logger.GetLogger().Error("ws Upgrade err", logger.Error(err))
-		return
-	}
-
-	// create new room
-	roomId := fmt.Sprintf("%d", unique_id.GenerateID().Int64())
-	room := roomManager.FindRoom(roomId)
-	go func() {
-		room.Run()
-	}()
-
-	// client
-	client := ws_connect.NewClient(room, conn, make(chan []byte, 256))
-	client.Room.Register <- client
-
-	// Allow collection of memory referenced by the caller by doing all work in
-	// new goroutines.
-	go client.WritePump()
-	go client.ReadPump()
-
+	ctx.Data(http.StatusOK, "", []byte("backend server"))
 }
 
 func main() {
@@ -78,9 +40,6 @@ func main() {
 
 	// print
 	logger.GetLogger().Info("load config file", logger.Any("cfg", cfg))
-
-	// ws connect
-	roomManager = ws_connect.NewRoomManager()
 
 	// rabbit mq connect
 	conn, err := amqp.Dial(cfg.RabbitMQ.DialUrl)
@@ -109,25 +68,25 @@ func main() {
 
 	// mq exchange
 	if err = ch.ExchangeDeclare(
-		cfg.RabbitMQ.Exchange.Name,        // name
-		cfg.RabbitMQ.Exchange.Type,        // type
-		cfg.RabbitMQ.Exchange.Durable,     // durable
-		cfg.RabbitMQ.Exchange.AutoDeleted, // auto-deleted
-		cfg.RabbitMQ.Exchange.Internal,    // internal
-		cfg.RabbitMQ.Exchange.NoWait,      // no-wait
-		nil,                               // arguments
+		cfg.RabbitMQ.MsgRespExchange.Name,        // name
+		cfg.RabbitMQ.MsgRespExchange.Type,        // type
+		cfg.RabbitMQ.MsgRespExchange.Durable,     // durable
+		cfg.RabbitMQ.MsgRespExchange.AutoDeleted, // auto-deleted
+		cfg.RabbitMQ.MsgRespExchange.Internal,    // internal
+		cfg.RabbitMQ.MsgRespExchange.NoWait,      // no-wait
+		nil,                                      // arguments
 	); err != nil {
 		panic(fmt.Sprintf("Failed to declare an exchange RabbitMQ,err:%s", err.Error()))
 	}
 
 	if err = consumeCh.ExchangeDeclare(
-		cfg.RabbitMQ.Exchange.Name,        // name
-		cfg.RabbitMQ.Exchange.Type,        // type
-		cfg.RabbitMQ.Exchange.Durable,     // durable
-		cfg.RabbitMQ.Exchange.AutoDeleted, // auto-deleted
-		cfg.RabbitMQ.Exchange.Internal,    // internal
-		cfg.RabbitMQ.Exchange.NoWait,      // no-wait
-		nil,                               // arguments
+		cfg.RabbitMQ.MsgExchange.Name,        // name
+		cfg.RabbitMQ.MsgExchange.Type,        // type
+		cfg.RabbitMQ.MsgExchange.Durable,     // durable
+		cfg.RabbitMQ.MsgExchange.AutoDeleted, // auto-deleted
+		cfg.RabbitMQ.MsgExchange.Internal,    // internal
+		cfg.RabbitMQ.MsgExchange.NoWait,      // no-wait
+		nil,                                  // arguments
 	); err != nil {
 		panic(fmt.Sprintf("Failed to declare an consume exchange RabbitMQ,err:%s", err.Error()))
 	}
@@ -137,7 +96,7 @@ func main() {
 	pubsub.InitDefaultPublisher(rm)
 
 	// new consume logic
-	cl := NewConsumeLogic(roomManager)
+	cl := NewConsumeLogic(rm)
 	// run mq consumer
 
 	consume, err := NewMQConsumer(cfg, consumeCh, cl)
@@ -149,19 +108,11 @@ func main() {
 		panic(fmt.Sprintf("Failed to Run Consumer,err:%s", err.Error()))
 	}
 
-	// init upgrader
-	upgrader.CheckOrigin = func(r *http.Request) bool {
-		return true
-	}
-
 	// setup gin
 	router := gin.Default()
 	router.Use(cors.Default())
 
 	router.GET("/", serveHome)
-	router.GET("/ws", ServeWs)
-
-	api.RegisterRouter(router)
 
 	// run gin server
 	server := &http.Server{

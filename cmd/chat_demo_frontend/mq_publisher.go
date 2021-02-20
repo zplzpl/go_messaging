@@ -17,10 +17,10 @@ func NewMQPublisher(cfg *ConfigParser, ch *amqp.Channel) *MQPublisher {
 func (a *MQPublisher) Publish(msgKey string, buf []byte) error {
 
 	err := a.ch.Publish(
-		a.cfg.RabbitMQ.MsgRespPublish.Exchange,
+		a.cfg.RabbitMQ.MsgPublish.Exchange,
 		msgKey,
-		a.cfg.RabbitMQ.MsgRespPublish.Mandatory,
-		a.cfg.RabbitMQ.MsgRespPublish.Immediate,
+		a.cfg.RabbitMQ.MsgPublish.Mandatory,
+		a.cfg.RabbitMQ.MsgPublish.Immediate,
 		amqp.Publishing{
 			ContentType: "text/plain",
 			Body:        buf,

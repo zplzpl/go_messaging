@@ -12,7 +12,7 @@
 ## Frontend
 
 1. cd ./cmd/chat_demo_frontend
-2. edit ./cmd/chat_demo_frontend/config/app.toml ,set `WebsocketServer.WsUrl`
+2. edit ./cmd/chat_demo_frontend/config/app.toml
 3. go build .
 4. run bin file
 

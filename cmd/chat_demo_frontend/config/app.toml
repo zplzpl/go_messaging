@@ -4,5 +4,46 @@ Addr = "127.0.0.1:8282"
 ReadTimeout = 180
 WriteTimeout = 180
 
-[WebsocketServer]
-WsUrl = "ws://127.0.0.1:8181/ws"
+# rabbitMQ
+[RabbitMQ]
+DialUrl = "amqp://admin:admin@localhost:5672/"
+
+[RabbitMQ.MsgRespExchange]
+Name = "messaging_resp"
+Type = "fanout"
+Durable = true
+AutoDeleted = false
+Internal = false
+NoWait = false
+
+[RabbitMQ.MsgRespQueueDeclare]
+Name = ""
+Durable = false
+DeleteWhenUnused = false
+Exclusive = true
+NoWait = false
+
+[RabbitMQ.MsgRespQueueBind]
+RoutingKey = ""
+Exchange = "messaging_resp"
+NoWait = false
+
+[RabbitMQ.MsgRespConsume]
+Consumer = ""
+AutoAck = true
+Exclusive = false
+NoLocal = false
+NoWait = false
+
+[RabbitMQ.MsgExchange]
+Name = "messaging"
+Type = "fanout"
+Durable = true
+AutoDeleted = false
+Internal = false
+NoWait = false
+
+[RabbitMQ.MsgPublish]
+Exchange = "messaging"
+Mandatory = false
+Immediate = false
