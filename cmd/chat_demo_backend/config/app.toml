@@ -1,0 +1,41 @@
+# web server
+[Server]
+Addr = "127.0.0.1:8181"
+ReadTimeout = 180
+WriteTimeout = 180
+
+# rabbitMQ
+[RabbitMQ]
+DialUrl = "amqp://admin:admin@localhost:5672/"
+
+[RabbitMQ.Exchange]
+Name = "messaging"
+Type = "fanout"
+Durable = true
+AutoDeleted = false
+Internal = false
+NoWait = false
+
+[RabbitMQ.Publish]
+Exchange = "messaging"
+Mandatory = false
+Immediate = false
+
+[RabbitMQ.QueueDeclare]
+Name = ""
+Durable = false
+DeleteWhenUnused = false
+Exclusive = true
+NoWait = false
+
+[RabbitMQ.QueueBind]
+RoutingKey = ""
+Exchange = "messaging"
+NoWait = false
+
+[RabbitMQ.Consume]
+Consumer = ""
+AutoAck = true
+Exclusive = false
+NoLocal = false
+NoWait = false

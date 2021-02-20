@@ -1,0 +1,8 @@
+# web server
+[Server]
+Addr = "127.0.0.1:8282"
+ReadTimeout = 180
+WriteTimeout = 180
+
+[WebsocketServer]
+WsUrl = "ws://127.0.0.1:8181/ws"
